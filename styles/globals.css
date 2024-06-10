@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html,
 body {
   padding: 0;
@@ -13,4 +17,16 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+.bground {
+  background: hsla(246, 79%, 32%, 1);
+
+background: radial-gradient(circle, hsla(246, 79%, 32%, 1) 31%, hsla(264, 66%, 34%, 1) 100%, hsla(293, 93%, 68%, 1) 100%);
+
+background: -moz-radial-gradient(circle, hsla(246, 79%, 32%, 1) 31%, hsla(264, 66%, 34%, 1) 100%, hsla(293, 93%, 68%, 1) 100%);
+
+background: -webkit-radial-gradient(circle, hsla(246, 79%, 32%, 1) 31%, hsla(264, 66%, 34%, 1) 100%, hsla(293, 93%, 68%, 1) 100%);
+
+filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#1E1191", endColorstr="#4B1E90", GradientType=1 );
 }
