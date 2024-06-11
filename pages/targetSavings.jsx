@@ -1,8 +1,8 @@
 import React from 'react'
 import bg from "../public/homebg.png";
 import Navbar from "../components/Navbar"
-import TargetSavings from "../components/TargetSavings"
-
+// import TargetSavings from "../components/TargetSavings"
+import InitialSavings from '../components/InitialSavings';
 const TargetSavings = () => {
     const headerStyle = {
         backgroundImage: `url(${bg.src})`,
@@ -25,7 +25,8 @@ const TargetSavings = () => {
         <div>
             <Navbar />
         </div>
-        <TargetSavings />
+        {/* <TargetSavings /> */}
+        <InitialSavings />
     </div>
   )
 }

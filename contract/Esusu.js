@@ -1,5 +1,5 @@
 export const Esusu = {
-    address: "0x914e5D06d4fc0856C09aE99d47B21124a3B4bC0B",
+    address: "0x532dfE1077FAf3DD2eE516A6f0467c915850c6aa",
     abi: [
         {
             "inputs": [

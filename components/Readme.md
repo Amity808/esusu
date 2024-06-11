@@ -7,10 +7,7 @@ import {ethers} from "ethers"
 import {utils, BrowserProvider } from "zksync-ethers"
 import { getWallet } from "../utils/getWallet"
 import { Generatepayment } from "../contract/GeneralPayment"
-import { useSimulateContract, useWriteContract, useReadContract, useAccount} from "wagmi"
 
-//0x25fE59A2a8ed3486EacFba40b963b153bF08cf48
-//0x25fE59A2a8ed3486EacFba40b963b153bF08cf48
 const ChildSavings = () => {
   const placeholders = ["input age you want her to withdraw", "e.g 12, in year"];
   const placeholderAmount = ["Input amount", "Your saving is safe with us"];
@@ -18,7 +15,6 @@ const ChildSavings = () => {
 
   let provider;
 
-  const { address } = useAccount()
   if (typeof window !== "undefined" && window.ethereum) {
     provider = new BrowserProvider(window.ethereum);
   }
@@ -27,47 +23,103 @@ const ChildSavings = () => {
   const [amount, setAmount] = useState('')
   const [gurdianAddress, setGurdianAddress] = useState('')
   const isFormFilled = age && amount && gurdianAddress
-  
+
   const handleClear = () => {
     setAge('')
     setAmount('')
     setGurdianAddress('')
   }
 
-  const { data: dtailapp } = useReadContract({
-    abi: Esusu.abi,
-    address: Esusu.address,
-    functionName: "_childSavings",
-    args:[
-      address
-    ]
+  const wallet = getWallet(process.env.NEXT_PUBLIC_WALLET_PRIVATE_KEY);
+  
+  const esusuContract = new ethers.Contract(
+    Esusu.address,
+    Esusu.abi,
+    wallet
+  )
+
+  const paymasterParams = utils.getPaymasterParams(Generatepayment.address, {
+    type: "General",
+    innerInput: new Uint8Array(),
   })
 
-  console.log(dtailapp, "child")
-  const { writeContractAsync } = useWriteContract()
+  // const savepromise = async (e) => {
+  //   e.preventDefault()
+  //   if(!isFormFilled) alert("Please the correct details")
 
-  const saveAmount = BigInt(Math.round(amount * 1000000))
+  //     try {
+  //       let paymasterBalance = await provider.getBalance(Generatepayment.address);
+  //     console.log("Balance paymaster ", paymasterBalance.toString());
 
-  const { data: simulateDeposit, error: similuatError } = useSimulateContract({
-    abi: Esusu.abi,
-    address: Esusu.address,
-    functionName: "depositChildSavingsReg",
-    args:[
-      age, amount, gurdianAddress
-    ]
-  })
+  //     const saveAmount = BigInt(Math.round(amount * 1000000))
 
-  console.log(similuatError);
+  //     const result = await esusuContract.depositChildSavingsReg(
+  //       age, saveAmount, gurdianAddress, {
+  //         customData: {
+  //           gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+  //           paymasterParams: paymasterParams,
+  //         }
+  //       }
+  //     );
 
+  //     await result.wait();
 
-
-  const savepromise = async () => {
+  //     console.log(result, "result")
+  //     handleClear();
+  //     } catch (error) {
+  //       console.log(error)
+  //     }
+  // }
+  const savepromise = async (e) => {
+    e.preventDefault();
+    if (!isFormFilled) alert("Please fill in the correct details");
+  
     try {
-      await writeContractAsync(simulateDeposit?.request)
+      let paymasterBalance = await provider.getBalance(Generatepayment.address);
+      console.log("Balance paymaster ", paymasterBalance.toString());
+  
+      if (!esusuContract || typeof esusuContract.depositChildSavingsReg!== 'function') {
+        throw new Error('Contract instance is undefined or does not have the expected method.');
+      }
+      
+      const saveAmount = BigInt(Math.round(amount * 1000000));
+  
+      // Estimate gas for the transaction
+      const estimatedGas = await esusuContract.estimateGas.depositChildSavingsReg(age, saveAmount, gurdianAddress, {
+        customData: {
+          gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+          paymasterParams: paymasterParams,
+        },
+      });
+      console.log(estimatedGas)
+  
+      // Set gas price and max fee per gas according to EIP-1559
+      const gasPrice = await provider.getGasPrice();
+      const maxFeePerGas = ethers.utils.parseUnits('10', 'gwei'); // Example value, adjust as needed
+      const maxPriorityFeePerGas = ethers.utils.parseUnits('1', 'gwei'); // Example value, adjust as needed
+  
+      const result = await esusuContract.depositChildSavingsReg(
+        age, saveAmount, guardianAddress, {
+          customData: {
+            gasPerPubdata: utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
+            paymasterParams: paymasterParams,
+          },
+          gasLimit: estimatedGas.add(10000), // Add a buffer to the estimated gas
+          gasPrice: gasPrice,
+          maxFeePerGas: maxFeePerGas,
+          maxPriorityFeePerGas: maxPriorityFeePerGas,
+        }
+      );
+  
+      await result.wait();
+  
+      console.log(result, "result");
+      handleClear();
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
+  
   
   const saveForChild = async (e) => {
     e.preventDefault();
@@ -92,7 +144,7 @@ const ChildSavings = () => {
         </p>
       </div>
       <div>
-        <form className=" flex flex-col gap-5" onSubmit={saveForChild}>
+        <form className=" flex flex-col gap-5" onSubmit={savepromise}>
           <div>
             <CustomInput onChange={(e) => setAge(e.target.value)} 
             
